@@ -211,17 +211,151 @@ font-size: 12px;
 }
 </style>
 </head>
+<!DOCTYPE html>
+<html>
+<head>
+<title>ScriptBlox Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+body {
+background: #0a0a0a;
+color: white;
+font-family: Arial;
+margin: 0;
+padding: 0;
+}
+
+.navbar {
+background: #1a1a1a;
+padding: 20px;
+text-align: center;
+position: fixed;
+width: 100%;
+top: 0;
+left: 0;
+z-index: 100;
+box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.navbar h1 {
+color: #4287f5;
+margin: 0;
+font-size: 24px;
+}
+
+.content {
+margin-top: 100px;
+max-width: 1200px;
+margin-left: auto;
+margin-right: auto;
+padding: 0 20px;
+}
+
+.search-box {
+width: 100%;
+padding: 15px;
+background: #1a1a1a;
+border: 2px solid #4287f5;
+border-radius: 10px;
+color: white;
+font-size: 16px;
+margin-bottom: 20px;
+}
+
+.script-card {
+background: #1a1a1a;
+padding: 20px;
+margin-bottom: 20px;
+border-radius: 10px;
+border: 1px solid #4287f5;
+transition: transform 0.3s;
+}
+
+.script-card:hover {
+transform: translateY(-5px);
+box-shadow: 0 5px 15px rgba(66, 135, 245, 0.2);
+}
+
+.script-image {
+width: 100%;
+height: 200px;
+object-fit: cover;
+border-radius: 10px;
+margin-bottom: 15px;
+}
+
+.script-title {
+color: #4287f5;
+font-size: 20px;
+margin: 10px 0;
+}
+
+.script-info {
+background: #252525;
+padding: 10px;
+border-radius: 8px;
+margin: 10px 0;
+}
+
+.button {
+padding: 10px 20px;
+border-radius: 5px;
+cursor: pointer;
+margin-right: 10px;
+font-weight: bold;
+transition: all 0.3s;
+}
+
+.copy-btn {
+background: #4287f5;
+color: white;
+border: none;
+}
+
+.copy-btn:hover {
+background: #3b76d4;
+}
+
+.view-btn {
+background: transparent;
+color: #4287f5;
+border: 2px solid #4287f5;
+}
+
+.view-btn:hover {
+background: rgba(66, 135, 245, 0.1);
+}
+
+.loader {
+text-align: center;
+color: #4287f5;
+margin: 20px 0;
+display: none;
+}
+
+@media (max-width: 768px) {
+.content {
+padding: 0 15px;
+}
+
+.script-card {
+margin-bottom: 15px;
+}
+}
+</style>
+</head>
+
 <body>
 <div class="navbar">
 <h1>ScriptBlox Pro</h1>
 </div>
-
 <div class="content">
 <input type="text" class="search-box" placeholder="Search for scripts (e.g. doors, blox fruits)...">
 <div class="loader">
 <i class="fas fa-spinner fa-spin"></i> Searching...
 </div>
-<div class="scripts-grid" id="results"></div>
+<div id="results"></div>
 </div>
 
 <script>
@@ -241,26 +375,21 @@ headers: {
 body: JSON.stringify({
 q: query,
 page: 0,
-max: 20,
-filters: {
-free: true
-}
+max: 20
 })
 });
-
-if (!response.ok) throw new Error('API Error');
 
 const data = await response.json();
 console.log('Search Results:', data);
 
-if (data.scripts && data.scripts.length > 0) {
-data.scripts.forEach(script => {
+if (data.result?.scripts?.length > 0) {
+data.result.scripts.forEach(script => {
 const card = document.createElement('div');
 card.className = 'script-card';
 
-const safeScript = script.script ? script.script.replace(/`/g, '\`').replace(/\${/g, '\${') : '';
+const safeScript = script.script ? script.script.replace(//g, '\').replace(/${/g, '${') : '';
 
-card.innerHTML = `
+card.innerHTML = 
 <img class="script-image"
 src="${script.game?.imageUrl || 'https://scriptblox.com/images/default.png'}"
 onerror="this.src='https://scriptblox.com/images/default.png'"
@@ -271,32 +400,32 @@ loading="lazy">
 <div><i class="fas fa-eye"></i> ${script.views || 0} views</div>
 </div>
 <div class="button-group">
-<button class="button copy-btn" onclick="copyScript(this, \`${safeScript}\`)">
+<button class="button copy-btn" onclick="copyScript(this, \${safeScript}`)">
 <i class="fas fa-copy"></i> Copy Script
 </button>
-<button class="button view-btn" onclick="window.open('https://scriptblox.com/script/${script._id}')">
+<button class="button view-btn" onclick="window.open('https://scriptblox.com/script/$%7Bscript._id%7D')">
 <i class="fas fa-external-link-alt"></i> View Details
 </button>
-</div>`;
+</div>;
 
 results.appendChild(card);
 });
 } else {
-results.innerHTML = `
+results.innerHTML = 
 <div class="script-card" style="text-align: center;">
 <i class="fas fa-search"></i>
 <div>No scripts found for "${query}"</div>
 <div style="color: #888;">Try searching for something else</div>
-</div>;
+</div>`;
 }
 } catch (error) {
 console.error('Search Error:', error);
-results.innerHTML = 
+results.innerHTML = `
 <div class="script-card" style="text-align: center;">
 <i class="fas fa-exclamation-circle"></i>
 <div>Error searching scripts</div>
 <div style="color: #888;">Please try again in a few moments</div>
-</div>;
+</div>`;
 } finally {
 loader.style.display = 'none';
 }
@@ -320,7 +449,6 @@ button.style.background = '#ff4444';
 }
 }
 
-// Search on Enter key
 document.querySelector('.search-box').addEventListener('keyup', function(e) {
 if (e.key === 'Enter') {
 const query = this.value.trim();
@@ -331,17 +459,7 @@ searchScripts(query);
 }
 });
 
-// Also add click search
-document.querySelector('.search-box').addEventListener('search', function() {
-const query = this.value.trim();
-if (query) {
-console.log('Searching for:', query);
-searchScripts(query);
-}
-});
-
-// Initial message
-document.getElementById('results').innerHTML = 
+document.getElementById('results').innerHTML = `
 <div class="script-card" style="text-align: center;">
 <i class="fas fa-search" style="font-size: 24px; margin-bottom: 10px;"></i>
 <div>Enter a search term and press Enter</div>
