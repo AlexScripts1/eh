@@ -229,82 +229,74 @@ async function searchScripts(query) {
 const loader = document.querySelector('.loader');
 const results = document.getElementById('results');
 
-try {
 loader.style.display = 'block';
 results.innerHTML = '';
 
+try {
 const response = await fetch('https://scriptblox.com/api/script/search', {
 method: 'POST',
 headers: {
-'Content-Type': 'application/json',
-'Accept': 'application/json'
+'Content-Type': 'application/json'
 },
 body: JSON.stringify({
 q: query,
 page: 0,
-max: 18
+max: 20,
+filters: {
+free: true
+}
 })
 });
 
-if (!response.ok) throw new Error('Failed to fetch scripts');
+if (!response.ok) throw new Error('API Error');
 
 const data = await response.json();
+console.log('Search Results:', data);
 
-if (data.result?.scripts?.length > 0) {
-data.result.scripts.forEach(script => {
-if (script) {
+if (data.scripts && data.scripts.length > 0) {
+data.scripts.forEach(script => {
 const card = document.createElement('div');
 card.className = 'script-card';
 
-// Safely escape script content and handle features
 const safeScript = script.script ? script.script.replace(/`/g, '\`').replace(/\${/g, '\${') : '';
-const features = script.features?.length > 0 ? script.features.join(', ') : 'No features listed';
-const verified = script.verified ? '<span style="color: #45a049"><i class="fas fa-check-circle"></i> Verified</span>' : '';
 
 card.innerHTML = `
 <img class="script-image"
 src="${script.game?.imageUrl || 'https://scriptblox.com/images/default.png'}"
 onerror="this.src='https://scriptblox.com/images/default.png'"
 loading="lazy">
-<h3 class="script-title">${script.title || 'Untitled Script'} ${verified}</h3>
-<div class="script-description">
-<strong>Features:</strong><br>
-${features}
-</div>
+<h3 class="script-title">${script.title || 'Untitled Script'}</h3>
 <div class="script-info">
 <div><i class="fas fa-gamepad"></i> ${script.game?.name || 'Unknown Game'}</div>
 <div><i class="fas fa-eye"></i> ${script.views || 0} views</div>
-<div><i class="fas fa-calendar"></i> ${new Date(script.createdAt).toLocaleDateString()}</div>
-<div><i class="fas fa-thumbs-up"></i> ${script.votes?.length || 0} votes</div>
 </div>
 <div class="button-group">
-<button class="button copy-btn" onclick="copyScript(this, `${safeScript}`)">
+<button class="button copy-btn" onclick="copyScript(this, \`${safeScript}\`)">
 <i class="fas fa-copy"></i> Copy Script
 </button>
-<button class="button view-btn" onclick="window.open('https://scriptblox.com/script/$%7Bscript._id%7D')">
+<button class="button view-btn" onclick="window.open('https://scriptblox.com/script/${script._id}')">
 <i class="fas fa-external-link-alt"></i> View Details
 </button>
-</div>
-;
+</div>`;
+
 results.appendChild(card);
-}
 });
 } else {
-results.innerHTML = 
-<div class="script-card" style="grid-column: 1 / -1; text-align: center;">
-<i class="fas fa-search" style="font-size: 24px; margin-bottom: 10px;"></i>
+results.innerHTML = `
+<div class="script-card" style="text-align: center;">
+<i class="fas fa-search"></i>
 <div>No scripts found for "${query}"</div>
-<div style="color: #888; margin-top: 5px;">Try searching for something else</div>
+<div style="color: #888;">Try searching for something else</div>
 </div>;
 }
 } catch (error) {
 console.error('Search Error:', error);
 results.innerHTML = 
-<div class="script-card" style="grid-column: 1 / -1; text-align: center;">
-<i class="fas fa-exclamation-circle" style="font-size: 24px; color: #ff4444; margin-bottom: 10px;"></i>
+<div class="script-card" style="text-align: center;">
+<i class="fas fa-exclamation-circle"></i>
 <div>Error searching scripts</div>
-<div style="color: #888; margin-top: 5px;">Please try again in a few moments</div>
-</div>`;
+<div style="color: #888;">Please try again in a few moments</div>
+</div>;
 } finally {
 loader.style.display = 'none';
 }
@@ -314,22 +306,16 @@ function copyScript(button, script) {
 if (script) {
 try {
 navigator.clipboard.writeText(script);
-const originalText = button.innerHTML;
 button.innerHTML = '<i class="fas fa-check"></i> Copied!';
 button.style.background = '#45a049';
-
-setTimeout(() => {
-button.innerHTML = originalText;
-button.style.background = '#4287f5';
-}, 2000);
-} catch (error) {
-button.innerHTML = '<i class="fas fa-times"></i> Error!';
-button.style.background = '#ff4444';
 
 setTimeout(() => {
 button.innerHTML = '<i class="fas fa-copy"></i> Copy Script';
 button.style.background = '#4287f5';
 }, 2000);
+} catch (error) {
+button.innerHTML = '<i class="fas fa-times"></i> Error!';
+button.style.background = '#ff4444';
 }
 }
 }
@@ -339,25 +325,27 @@ document.querySelector('.search-box').addEventListener('keyup', function(e) {
 if (e.key === 'Enter') {
 const query = this.value.trim();
 if (query) {
+console.log('Searching for:', query);
 searchScripts(query);
 }
 }
 });
 
-// Mobile-friendly search
+// Also add click search
 document.querySelector('.search-box').addEventListener('search', function() {
 const query = this.value.trim();
 if (query) {
+console.log('Searching for:', query);
 searchScripts(query);
 }
 });
 
-// Initial welcome message
-document.getElementById('results').innerHTML = `
-<div class="script-card" style="grid-column: 1 / -1; text-align: center;">
-<i class="fas fa-search" style="font-size: 32px; color: #4287f5; margin-bottom: 15px;"></i>
-<div style="font-size: 18px; margin-bottom: 10px;">Search for Scripts</div>
-<div style="color: #888;">Try searching for: doors, blox fruits, psx, bedwars</div>
+// Initial message
+document.getElementById('results').innerHTML = 
+<div class="script-card" style="text-align: center;">
+<i class="fas fa-search" style="font-size: 24px; margin-bottom: 10px;"></i>
+<div>Enter a search term and press Enter</div>
+<div style="color: #888;">Try searching for: doors, blox fruits, psx</div>
 </div>`;
 </script>
 </body>
